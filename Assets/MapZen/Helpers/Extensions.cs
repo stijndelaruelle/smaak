@@ -44,11 +44,11 @@ public static class Extensions
         switch (s)
         {
             //Water
-            case Tile.LineStringType.Canal:     return 30;
+            case Tile.LineStringType.Canal:     return 1;
             case Tile.LineStringType.Dam:       return 5;
             case Tile.LineStringType.Ditch:     return 5;
             case Tile.LineStringType.Drain:     return 5;
-            case Tile.LineStringType.River:     return 20;
+            case Tile.LineStringType.River:     return 10;
             case Tile.LineStringType.Stream:    return 10;
 
             //Roads

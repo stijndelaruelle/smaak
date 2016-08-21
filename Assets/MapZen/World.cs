@@ -30,7 +30,7 @@ public class World : MonoBehaviour
     {
         //Central map ID
         m_CentralMapID = Extensions.WorldToTilePos(m_Latitude, m_Longitude, m_Zoom);
-        m_CentralMapSize = GM.TileBounds(m_CentralMapID, m_Zoom);;
+        m_CentralMapSize = GM.TileBounds(m_CentralMapID, m_Zoom);
 
         Tile.TileDetail detail = 0x0;
         if (m_Earth) detail |= Tile.TileDetail.Earth;
@@ -48,12 +48,15 @@ public class World : MonoBehaviour
         {
             for (int y = -1; y <= 1; ++y)
             {
+                Vector2 currentMapID = new Vector2(m_CentralMapID.x + x, m_CentralMapID.y + y);
+
                 Tile tile = GameObject.Instantiate(m_TilePrefab) as Tile;
+                tile.name = "Tile x: " + currentMapID.x + " y: " + currentMapID.y + " z: " + m_Zoom;
+
                 tile.transform.parent = this.transform;
+                tile.transform.position = this.transform.position + new Vector3(x * m_CentralMapSize.width, 0.0f, y * m_CentralMapSize.height);
 
-                tile.transform.position = this.transform.position + new Vector3(x * m_CentralMapSize.width, 0.0f, y * -m_CentralMapSize.height);
-
-                tile.Initialize(new Vector2(m_CentralMapID.x + x, m_CentralMapID.y + y), m_Zoom, detail);
+                tile.Initialize(new Vector2(currentMapID.x, currentMapID.y), m_Zoom, detail);
             }
         }
     }

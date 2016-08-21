@@ -117,8 +117,6 @@ public class Tile : MonoBehaviour
 
         //Once we have the data go build some things!
         m_Rect = GM.TileBounds(mapID, zoom);
-        m_Rect.x -= transform.position.x;
-        m_Rect.y += transform.position.z;
 
         //If there are only roads, we pass the entire file.
         if (detail == TileDetail.Water)     { CreateWater(mapData);     yield return null; }
@@ -213,12 +211,15 @@ public class Tile : MonoBehaviour
         }
 
         //Add a new LineString component & parent it to this object
-        LineString road = GameObject.Instantiate(prefab) as LineString;
-        road.transform.parent = this.transform;
+        LineString lineString = GameObject.Instantiate(prefab) as LineString;
+        lineString.name = name;
+
+        lineString.transform.parent = this.transform;
+        lineString.transform.position = this.transform.position;
 
         try
-        {  
-            road.Initialize(vertices, width);
+        {
+            lineString.Initialize(vertices, width);
         }
         catch (Exception ex)
         {
@@ -258,6 +259,7 @@ public class Tile : MonoBehaviour
             polygon.name = name;
 
             polygon.transform.parent = this.transform;
+            polygon.transform.position = this.transform.position;
             //polygon.transform.position = center;
             //polygon.transform.localPosition = center;
             
