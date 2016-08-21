@@ -8,7 +8,7 @@ public class GPSCoordinateLabel : MonoBehaviour
     private Text m_Text;
 
     //Cached data
-    private LocationInfo m_LocationInfo;
+    private GPSManager.CustomLocationInfo m_LocationInfo;
     private float m_LatitudeSinceLast;
     private float m_LongitudeSinceLast;
     private float m_HorizontalAccuracySinceLast;
@@ -17,6 +17,11 @@ public class GPSCoordinateLabel : MonoBehaviour
     private void Awake()
     {
         m_Text = GetComponent<Text>();
+    }
+
+    private void Start()
+    {
+        m_LocationInfo = GPSManager.Instance.GetLocationInfo();
     }
 
     private void Update()

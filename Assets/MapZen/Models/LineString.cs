@@ -26,8 +26,11 @@ public class LineString : MonoBehaviour
         //Loop trough all the vertices, and create vertices next to it depending on the width and the direction
 
         Vector3 prevPerpendicular = new Vector3();
+        Vector2 prevUV = new Vector2();
 
         List<Vector3> vertices = new List<Vector3>();
+        List<Vector2> uvs = new List<Vector2>();
+
         for (int i = 0; i < sourceVertices.Count - 1; ++i)
         {
             Vector3 startVertex = sourceVertices[i];
@@ -53,14 +56,19 @@ public class LineString : MonoBehaviour
             {
                 vertices.Add(startVertex - (perpendicular * width));
                 vertices.Add(startVertex + (perpendicular * width));
+
+                uvs.Add(new Vector2(0.0f, 0.0f));
+                uvs.Add(new Vector2(0.0f, 1.0f));
             }
 
             vertices.Add(endVertex - (perpendicular * width));
             vertices.Add(endVertex + (perpendicular * width));
 
+            uvs.Add(new Vector2(i + 1, 0.0f));
+            uvs.Add(new Vector2(i + 1, 1.0f));
+
             //Cache it
-            prevPerpendicular.x = perpendicular.x;
-            prevPerpendicular.z = perpendicular.z;
+            prevPerpendicular = perpendicular;
         }
 
         //Set the indices
@@ -82,6 +90,7 @@ public class LineString : MonoBehaviour
 
         mesh.vertices = vertices.ToArray();
         mesh.triangles = indices.ToArray();
+        mesh.uv = uvs.ToArray();
 
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
@@ -96,6 +105,6 @@ public class LineString : MonoBehaviour
     //    {
     //        Debug.DrawLine(m_DebugVertices[i], m_DebugVertices[i + 1], Color.yellow);
     //    }
-        
+
     //}
 }

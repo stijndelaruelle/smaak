@@ -1,34 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
-public class GPSManager : Singleton<GPSManager>
+public class GPSManagerMobile : GPSManager
 {
-    public enum GPSState
-    {
-        NotRunning,
-        Running,
-        Disabled,
-        TimedOut,
-        Failed,
-    }
-
-    [SerializeField]
-    private int m_TimeoutTime;
-
-    private GPSState m_GPSState;
-    private double m_InitializeTime;
-
-    private void OnEnable()
-    {
-        StartTracking();
-    }
-
-    private void OnDisable()
-    {
-        StopTracking();
-    }
-
-    private void StartTracking()
+    //GPSManager
+    protected virtual void StartTracking()
     {
         StartCoroutine(StartTrackingRoutine());
     }
@@ -70,45 +47,46 @@ public class GPSManager : Singleton<GPSManager>
         m_GPSState = GPSState.Running;
     }
 
-    private void StopTracking()
+    protected override void StopTracking()
     {
-        m_GPSState = GPSState.NotRunning;
+        base.StopTracking();
         Input.location.Stop();
     }
 
 
-    public GPSState GetState()
+    public override CustomLocationInfo GetLocationInfo()
     {
-        return m_GPSState;
+        LocationInfo origInfo = Input.location.lastData;
+        CustomLocationInfo info = new CustomLocationInfo();
+
+        info.latitude = origInfo.latitude;
+        info.longitude = origInfo.longitude;
+        info.timestamp = origInfo.timestamp;
+
+        info.altitude = origInfo.altitude;
+        info.horizontalAccuracy = origInfo.horizontalAccuracy;
+        info.verticalAccuracy = origInfo.verticalAccuracy;
+
+        return info;
     }
 
-    public LocationInfo GetLocationInfo()
-    {
-        return Input.location.lastData;
-    }
-
-    public float GetLongitude()
-    {
-        return Input.location.lastData.longitude;
-    }
-
-    public float GetLatitude()
+    public override float GetLatitude()
     {
         return Input.location.lastData.latitude;
     }
 
-    public float GetHorizontalAccuracy()
+    public override float GetLongitude()
+    {
+        return Input.location.lastData.longitude;
+    }
+
+    public override float GetHorizontalAccuracy()
     {
         return Input.location.lastData.horizontalAccuracy;
     }
 
-    public double GetTimestamp()
+    public override double GetTimestamp()
     {
         return Input.location.lastData.timestamp;
-    }
-
-    public double GetInitializationTime()
-    {
-        return m_InitializeTime;
     }
 }

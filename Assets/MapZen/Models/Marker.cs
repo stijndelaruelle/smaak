@@ -27,14 +27,14 @@ public class Marker : MonoBehaviour
 
     private void Update()
     {
-        //GPSManager gpsManager = GPSManager.Instance;
-        //m_Renderer.enabled = (gpsManager.GetState() == GPSManager.GPSState.Running);
+        GPSManager gpsManager = GPSManager.Instance;
+        m_Renderer.enabled = (gpsManager.GetState() == GPSManager.GPSState.Running);
 
-        //if (m_Renderer.enabled == false)
-        //    return;
+        if (m_Renderer.enabled == false)
+            return;
 
-        //m_Latitude = gpsManager.GetLatitude();
-        //m_Longitude = gpsManager.GetLongitude();
+        m_Latitude = gpsManager.GetLatitude();
+        m_Longitude = gpsManager.GetLongitude();
 
         UpdateMarker();
     }

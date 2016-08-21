@@ -50,13 +50,29 @@ public class Tile : MonoBehaviour
     [SerializeField]
     private Polygon m_BuildingPrefab;
 
-
-
     private Rect m_Rect;
+
+    #if UNITY_EDITOR
+        private Vector2 m_MapID;
+        public Vector2 MapID
+        {
+            get { return m_MapID; }
+        }
+
+        private int m_Zoom;
+        public int Zoom
+        {
+            get { return m_Zoom;}
+        }
+    #endif
 
     public void Initialize(Vector2 mapID, int zoom, TileDetail detail)
     {
         StartCoroutine(CreateTile(mapID, zoom, detail));
+
+        #if UNITY_EDITOR
+            InitializeDebug(mapID, zoom);
+        #endif
     }
 
     private IEnumerator CreateTile(Vector2 mapID, int zoom, TileDetail detail)
@@ -270,4 +286,18 @@ public class Tile : MonoBehaviour
             Debug.Log(ex);
         }
     }
+
+    #if UNITY_EDITOR
+    private void InitializeDebug(Vector2 mapID, int zoom)
+    {
+        //Used for getting debug GPS locations
+        m_MapID = mapID;
+        m_Zoom = zoom;
+
+        BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
+        boxCollider.size = new Vector3(m_Rect.width, 1.0f, m_Rect.height);
+        boxCollider.isTrigger = true;
+    }   
+    #endif
+
 }
