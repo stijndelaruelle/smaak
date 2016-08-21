@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GPSManager : Singleton<GPSManager>
 {
@@ -33,6 +34,8 @@ public class GPSManager : Singleton<GPSManager>
 
     protected GPSState m_GPSState;
     protected double m_InitializeTime;
+    private CustomLocationInfo m_LastSendLocation; //The location that was last send to the server
+
 
     private void OnEnable()
     {
@@ -92,6 +95,32 @@ public class GPSManager : Singleton<GPSManager>
         m_GPSState = GPSState.NotRunning;
     }
 
+    protected virtual void Update()
+    {
+        if (!GameSparksManager.Instance.IsLoggedIn())
+            return;
+
+        //If the difference between where we are and our LAST SEND location is too great, send a new location to the server
+        CustomLocationInfo currentLocation = GetLocationInfo();
+
+        bool update = false;
+
+        if (Mathf.Abs(currentLocation.latitude - m_LastSendLocation.latitude) > 0) update = true;
+        if (Mathf.Abs(currentLocation.longitude - m_LastSendLocation.longitude) > 0) update = true;
+
+        if (update)
+        {
+            List<GameSparksManager.DataAttribute> attributes = new List<GameSparksManager.DataAttribute>();
+            
+            attributes.Add(new GameSparksManager.DataAttribute("LAT", currentLocation.latitude));
+            attributes.Add(new GameSparksManager.DataAttribute("LON", currentLocation.longitude));
+
+            GameSparksManager.Instance.SendData("SAVE_PLAYER_GPS", attributes);
+
+            Debug.Log("Saved new GPS data!");
+            m_LastSendLocation = currentLocation;
+        }
+    }
 
     public virtual CustomLocationInfo GetLocationInfo()
     {

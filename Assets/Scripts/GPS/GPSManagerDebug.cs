@@ -16,13 +16,15 @@ public class GPSManagerDebug : GPSManager
         m_Timestamp = GetTimeSince1970();
     }
 
-    private void Update()
+    protected override void Update()
     {
         //On click
         if (Input.GetMouseButtonDown(0))
         {
             UpdateLocationInfo();   
         }
+
+        base.Update();
     }
 
     private void UpdateLocationInfo()

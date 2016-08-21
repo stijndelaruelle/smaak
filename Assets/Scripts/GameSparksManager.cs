@@ -1,9 +1,40 @@
 ﻿using UnityEngine;
 using System.Collections;
+using GameSparks.Core;
 using GameSparks.Api.Requests;
+using System.Collections.Generic;
 
 public class GameSparksManager : Singleton<GameSparksManager>
 {
+    public struct DataAttribute
+    {
+        public DataAttribute(string name, float data)
+        {
+            m_Name = name;
+            m_Data = data.ToString(); //GameSparks doesn't support floats, casting from and to strings is apparantly the best option (according to https://support.gamesparks.net/support/discussions/topics/1000053627)
+        }
+
+        public DataAttribute(string name, string data)
+        {
+            m_Name = name;
+            m_Data = data;
+        }
+
+        private string m_Name;
+        public string Name
+        {
+            get { return m_Name; }
+            set { m_Name = value; }
+        }
+
+        private string m_Data;
+        public string Data
+        {
+            get { return m_Data; }
+            set { m_Data = value; }
+        }
+    }
+
     [SerializeField]
     private MenuManager m_MenuManager;
 
@@ -20,6 +51,12 @@ public class GameSparksManager : Singleton<GameSparksManager>
     public Texture2D ProfilePicture
     {
         get { return m_ProfilePicture; }
+    }
+
+    private void Start()
+    {
+        //For testing purposes, always log out.
+        GS.Reset();
     }
 
     public void Login(string userName, string password)
@@ -131,5 +168,35 @@ public class GameSparksManager : Singleton<GameSparksManager>
         www.LoadImageIntoTexture(m_ProfilePicture);
 
         ShowGamePanel();
+    }
+
+    public bool IsLoggedIn()
+    {
+        return GS.Authenticated;
+    }
+
+    public void SendData(string eventName, List<DataAttribute> attributes)
+    {
+        LogEventRequest request = new LogEventRequest();
+
+        request.SetEventKey(eventName);
+        
+        foreach (DataAttribute attribute in attributes)
+        {
+            request.SetEventAttribute(attribute.Name, attribute.Data);
+        }
+
+        request.Send((response) =>
+        {
+            if (!response.HasErrors)
+            {
+                Debug.Log(eventName + " succesfully sent!");
+            }
+            else
+            {
+                Debug.LogError("Error sending " + eventName);
+            }
+        }
+        );
     }
 }
