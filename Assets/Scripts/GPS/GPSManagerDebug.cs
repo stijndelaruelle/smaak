@@ -5,6 +5,9 @@ using Assets.Helpers;
 
 public class GPSManagerDebug : GPSManager
 {
+    [SerializeField]
+    private bool m_AllowDebugClicking = true;
+
     private float m_Latitude;
     private float m_Longitude;
     private double m_Timestamp;
@@ -18,10 +21,13 @@ public class GPSManagerDebug : GPSManager
 
     protected override void Update()
     {
-        //On click
-        if (Input.GetMouseButtonDown(0))
+        if (m_AllowDebugClicking)
         {
-            UpdateLocationInfo();   
+            //On click
+            if (Input.GetMouseButtonDown(0))
+            {
+                UpdateLocationInfo();
+            }
         }
 
         base.Update();
@@ -51,7 +57,7 @@ public class GPSManagerDebug : GPSManager
         Vector3 worldPosition = hit.point;
 
         //Shave off the world offset
-        Vector2 offset = GameObject.FindObjectOfType<World>().CalculateOffset(tile.MapID); //Find object SUPER DIRTY, but this is debug code and otherwise passing the variable trough will clutter the actual live code.
+        Vector2 offset = World.Instance.CalculateOffset(tile.MapID); //Find object SUPER DIRTY, but this is debug code and otherwise passing the variable trough will clutter the actual live code.
         worldPosition.x -= offset.x;
         worldPosition.z -= offset.y;
 

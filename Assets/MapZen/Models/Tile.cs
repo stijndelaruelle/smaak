@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Assets.Helpers;
 using UnityEngine;
+using SimpleJSON;
 
 public class Tile : MonoBehaviour
 {
@@ -98,13 +99,13 @@ public class Tile : MonoBehaviour
         filePath += ".json";
 
         //Debug.Log(url);
-        JSONObject mapData = null;
+        JSONNode mapData = null;
 
         //If the data is already cached, use it.
         if (File.Exists(filePath))
         {
             var r = new StreamReader(filePath, Encoding.Default);
-            mapData = new JSONObject(r.ReadToEnd());
+            mapData = JSON.Parse(r.ReadToEnd());
 
             //Write down somewhere when it was last used, so we can clear the cache on demand. Otherwise player's phones may fill up A LOT!
         }
@@ -127,7 +128,7 @@ public class Tile : MonoBehaviour
                 sr.Write(www.text);
                 sr.Close();
 
-                mapData = new JSONObject(www.text);
+                mapData = JSON.Parse(www.text);
             }
         }
 
@@ -150,58 +151,58 @@ public class Tile : MonoBehaviour
             CreateBuildings(mapData["buildings"]);
     }
 
-    private void CreateWater(JSONObject waterData)
+    private void CreateWater(JSONNode waterData)
     {
         if (waterData == null)
             return;
 
         //Roads are always linestrings
         int i = 0;
-        foreach (JSONObject geoData in waterData["features"].list)
+        foreach (JSONNode geoData in waterData["features"].AsArray)
         {
             string name = "Water " + i;
             ++i;
 
-            if (geoData["geometry"]["type"].str == "LineString")
+            if (geoData["geometry"]["type"].Value == "LineString")
             {
-                LineStringType roadType = geoData["properties"]["kind"].str.ToLineStringType();
+                LineStringType roadType = geoData["properties"]["kind"].Value.ToLineStringType();
                 CreateLineString(geoData["geometry"], m_WaterLinePrefab, roadType.ToWidthFloat(), name);
             }
 
-            else if (geoData["geometry"]["type"].str == "Polygon")
+            else if (geoData["geometry"]["type"].Value == "Polygon")
             {
                 CreatePolygon(geoData["geometry"], m_WaterPolygonPrefab, name);
             }
         }
     }
 
-    private void CreateRoads(JSONObject roadData)
+    private void CreateRoads(JSONNode roadData)
     {
         if (roadData == null)
             return;
 
         //Roads are always linestrings
         int i = 0;
-        foreach (JSONObject geoData in roadData["features"].list)
+        foreach (JSONNode geoData in roadData["features"].AsArray)
         {
             string name = "Road " + i;
             ++i;
 
-            LineStringType roadType = geoData["properties"]["kind"].str.ToLineStringType();
+            LineStringType roadType = geoData["properties"]["kind"].Value.ToLineStringType();
             CreateLineString(geoData["geometry"], m_RoadPrefab, roadType.ToWidthFloat(), name);
         }
     }
 
-    private void CreateBuildings(JSONObject buildingData)
+    private void CreateBuildings(JSONNode buildingData)
     {
         if (buildingData == null)
             return;
 
         //Buildings are always polygons (we ignore the points)
         int i = 0;
-        foreach (JSONObject geoData in buildingData["features"].list)
+        foreach (JSONNode geoData in buildingData["features"].AsArray)
         {
-            if (geoData["geometry"]["type"].str == "Polygon")
+            if (geoData["geometry"]["type"].Value == "Polygon")
             {
                 string name = "Building " + i;
                 ++i;
@@ -212,15 +213,15 @@ public class Tile : MonoBehaviour
         }
     }
 
-    private void CreateLineString(JSONObject lineStringData, LineString prefab, float width, string name)
+    private void CreateLineString(JSONNode lineStringData, LineString prefab, float width, string name)
     {
         if (lineStringData == null)
             return;
 
         List<Vector3> vertices = new List<Vector3>();
-        foreach (JSONObject coordinate in lineStringData["coordinates"].list)
+        foreach (JSONNode coordinate in lineStringData["coordinates"].AsArray)
         {
-            Vector2 bm = GM.LatLonToMeters(coordinate[1].f, coordinate[0].f);
+            Vector2 bm = GM.LatLonToMeters(coordinate[1].AsFloat, coordinate[0].AsFloat);
             Vector2 pm = new Vector2(bm.x - m_Rect.center.x, bm.y - m_Rect.center.y);
 
             vertices.Add(pm.ToVector3xz());
@@ -243,7 +244,7 @@ public class Tile : MonoBehaviour
         }
     }
 
-    private void CreatePolygon(JSONObject polygonData, Polygon prefab, string name)
+    private void CreatePolygon(JSONNode polygonData, Polygon prefab, string name)
     {
         if (polygonData == null)
             return;
@@ -252,11 +253,11 @@ public class Tile : MonoBehaviour
 
         //foreach (JSONObject coordinate in polygonData["coordinates"][0].list) //[0] as we only want the base layer of the building.
         // {
-        for (int i = 0; i < polygonData["coordinates"][0].list.Count - 1; i++) //For some reason you should NOT take the last vertex as well. This ruins everything and I have no idea why (took me hours).
+        for (int i = 0; i < polygonData["coordinates"][0].AsArray.Count - 1; i++) //For some reason you should NOT take the last vertex as well. This ruins everything and I have no idea why (took me hours).
         {
-            JSONObject coordinate = polygonData["coordinates"][0].list[i];
+            JSONNode coordinate = polygonData["coordinates"][0].AsArray[i];
 
-            Vector2 bm = GM.LatLonToMeters(coordinate[1].f, coordinate[0].f);
+            Vector2 bm = GM.LatLonToMeters(coordinate[1].AsFloat, coordinate[0].AsFloat);
             Vector2 pm = new Vector2(bm.x - m_Rect.center.x, bm.y - m_Rect.center.y);
 
             vertices.Add(pm.ToVector3xz());

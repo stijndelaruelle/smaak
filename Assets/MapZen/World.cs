@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using Assets.Helpers;
 
-public class World : MonoBehaviour 
+public class World : Singleton<World>
 {
     [SerializeField]
     private Tile m_TilePrefab;

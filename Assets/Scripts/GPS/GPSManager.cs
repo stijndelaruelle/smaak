@@ -111,13 +111,29 @@ public class GPSManager : Singleton<GPSManager>
         if (update)
         {
             List<GameSparksManager.DataAttribute> attributes = new List<GameSparksManager.DataAttribute>();
-            
+
+            Vector2 mapID = Extensions.WorldToTilePos(currentLocation.latitude, currentLocation.longitude, 17);
+
+            attributes.Add(new GameSparksManager.DataAttribute("MAP_ID", mapID.x + "_" + mapID.y));
             attributes.Add(new GameSparksManager.DataAttribute("LAT", currentLocation.latitude));
             attributes.Add(new GameSparksManager.DataAttribute("LON", currentLocation.longitude));
 
+            //Only send this if we changed map to save data
+            Vector2 prevMapID = Extensions.WorldToTilePos(m_LastSendLocation.latitude, m_LastSendLocation.longitude, 17);
+            if (mapID != prevMapID)
+            {
+                attributes.Add(new GameSparksManager.DataAttribute("PREV_MAP_ID", prevMapID.x + "_" + prevMapID.y));
+            }
+
+            //otherwise just send a 0 to minimize data
+            else
+            {
+                attributes.Add(new GameSparksManager.DataAttribute("PREV_MAP_ID", "0"));
+            }
+
             GameSparksManager.Instance.SendData("SAVE_PLAYER_GPS", attributes);
 
-            Debug.Log("Saved new GPS data!");
+            Debug.Log("Saved new GPS data! " + mapID.x + " " + mapID.y);
             m_LastSendLocation = currentLocation;
         }
     }
