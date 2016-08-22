@@ -3,6 +3,7 @@ using System.Collections;
 using System;
 using Assets.Helpers;
 
+#if UNITY_EDITOR
 public class GPSManagerDebug : GPSManager
 {
     [SerializeField]
@@ -119,3 +120,4 @@ public class GPSManagerDebug : GPSManager
         return DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
     }
 }
+#endif

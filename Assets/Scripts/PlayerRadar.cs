@@ -8,8 +8,11 @@ public class PlayerRadar : MonoBehaviour
     [SerializeField]
     private float m_Delay;
 
+    //[SerializeField]
+    //private float m_Radius;
+
     [SerializeField]
-    private float m_Radius;
+    private Marker m_PersonalMarker;
 
     [SerializeField]
     private Pool m_MarkerPool;
@@ -52,17 +55,22 @@ public class PlayerRadar : MonoBehaviour
         //We reset all the markers when we receive the first update
         if (m_ResetMarkers)
         {
+            m_PersonalMarker.Deactivate();
             m_MarkerPool.ResetAll();
             m_ResetMarkers = false;
         }
 
         //Don't have a marker for the local player
         string playerID = result[0].Data;
-        if (playerID == GameSparksManager.Instance.GetPlayerID())
-            return;
-
         float latitude = result[1].GetDataAsFloat();
         float longitude = result[2].GetDataAsFloat();
+
+        if (playerID == GameSparksManager.Instance.GetPlayerID())
+        {
+            m_PersonalMarker.Activate();
+            m_PersonalMarker.SetLocation(latitude, longitude);
+            return;
+        }
 
         Marker marker = m_MarkerPool.ActivateAvailableObject() as Marker;
         marker.SetLocation(latitude, longitude);

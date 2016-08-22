@@ -78,6 +78,12 @@ public class GameSparksManager : Singleton<GameSparksManager>
         GS.Reset();
     }
 
+    private void OnApplicationQuit()
+    {
+        //Makes sure we log out (and our markers get removed)
+        GS.Disconnect();
+    }
+
     public void Login(string userName, string password)
     {
         AuthenticationRequest request = new AuthenticationRequest();
