@@ -45,6 +45,8 @@ public class GPSManagerMobile : GPSManager
 
         m_InitializeTime = Input.location.lastData.timestamp;
         m_GPSState = GPSState.Running;
+
+        OnStartTrackingCompleted();
     }
 
     protected override void StopTracking()

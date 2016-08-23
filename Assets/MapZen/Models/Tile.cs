@@ -78,6 +78,7 @@ public class Tile : MonoBehaviour
         string dirPath = Application.persistentDataPath;
         string filePath = dirPath + "/" + zoom + "_" + mapID.x + "_" + mapID.y + "_";
         string url = "http://vector.mapzen.com/osm/";
+        bool otherFileUsed = false;
 
         if (detail == 0)
         {
@@ -130,6 +131,7 @@ public class Tile : MonoBehaviour
                     {
                         var r = new StreamReader(allFiles[i], Encoding.Default);
                         mapData = JSON.Parse(r.ReadToEnd());
+                        otherFileUsed = true;
                         break;
                     }
                 }
@@ -161,10 +163,13 @@ public class Tile : MonoBehaviour
         //Once we have the data go build some things!
         m_Rect = GM.TileBounds(mapID, zoom);
 
-        //If there are only roads, we pass the entire file.
-        if (detail == TileDetail.Water)     { CreateWater(mapData);     yield return null; }
-        if (detail == TileDetail.Roads)     { CreateRoads(mapData);     yield return null; }
-        if (detail == TileDetail.Buildings) { CreateBuildings(mapData); yield return null; }
+        //If there are only roads, we pass the entire file. (unless it came from a file with more data!)
+        if (!otherFileUsed)
+        {
+            if (detail == TileDetail.Water) { CreateWater(mapData); yield return null; }
+            if (detail == TileDetail.Roads) { CreateRoads(mapData); yield return null; }
+            if (detail == TileDetail.Buildings) { CreateBuildings(mapData); yield return null; }
+        }
 
         //Else we only need part of it.
         if ((detail & TileDetail.Water) == TileDetail.Water)
@@ -196,7 +201,7 @@ public class Tile : MonoBehaviour
             if (geoData["geometry"]["type"].Value == "LineString")
             {
                 LineStringType roadType = geoData["properties"]["kind"].Value.ToLineStringType();
-                CreateLineString(geoData["geometry"], m_WaterLinePrefab, roadType.ToWidthFloat(), name);
+                CreateLineString(geoData["geometry"]["coordinates"], m_WaterLinePrefab, roadType.ToWidthFloat(), name);
             }
 
             else if (geoData["geometry"]["type"].Value == "Polygon")
@@ -211,7 +216,6 @@ public class Tile : MonoBehaviour
         if (roadData == null)
             return;
 
-        //Roads are always linestrings
         int i = 0;
         foreach (JSONNode geoData in roadData["features"].AsArray)
         {
@@ -219,7 +223,16 @@ public class Tile : MonoBehaviour
             ++i;
 
             LineStringType roadType = geoData["properties"]["kind"].Value.ToLineStringType();
-            CreateLineString(geoData["geometry"], m_RoadPrefab, roadType.ToWidthFloat(), name);
+
+            if (geoData["geometry"]["type"].Value == "LineString")
+            {
+                CreateLineString(geoData["geometry"]["coordinates"], m_RoadPrefab, roadType.ToWidthFloat(), name);
+            }
+
+            else if (geoData["geometry"]["type"].Value == "MultiLineString")
+            {
+                CreateMultiLineString(geoData["geometry"]["coordinates"], m_RoadPrefab, roadType.ToWidthFloat(), name);
+            }
         }
     }
 
@@ -243,13 +256,22 @@ public class Tile : MonoBehaviour
         }
     }
 
+    private void CreateMultiLineString(JSONNode multiLineStringData, LineString prefab, float width, string name)
+    {
+        //Every coordinate is another linestring in this case (confusing naming by the guys of mapzen)
+        foreach (JSONNode lineString in multiLineStringData.AsArray)
+        {
+            CreateLineString(lineString, prefab, width, name);
+        }
+    }
+
     private void CreateLineString(JSONNode lineStringData, LineString prefab, float width, string name)
     {
         if (lineStringData == null)
             return;
 
         List<Vector3> vertices = new List<Vector3>();
-        foreach (JSONNode coordinate in lineStringData["coordinates"].AsArray)
+        foreach (JSONNode coordinate in lineStringData.AsArray)
         {
             Vector2 bm = GM.LatLonToMeters(coordinate[1].AsFloat, coordinate[0].AsFloat);
             Vector2 pm = new Vector2(bm.x - m_Rect.center.x, bm.y - m_Rect.center.y);

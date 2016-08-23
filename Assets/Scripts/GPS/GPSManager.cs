@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class GPSManager : Singleton<GPSManager>
 {
@@ -25,6 +26,15 @@ public class GPSManager : Singleton<GPSManager>
         Failed,
     }
 
+    //Events
+    private Action m_GPSInitializedEvent;
+    public Action GPSInitializedEvent
+    {
+        get { return m_GPSInitializedEvent; }
+        set { m_GPSInitializedEvent = value; }
+    }
+
+    //Variables
     protected int m_TimeoutTime;
     public int TimeoutTime
     {
@@ -36,8 +46,8 @@ public class GPSManager : Singleton<GPSManager>
     protected double m_InitializeTime;
     private CustomLocationInfo m_LastSendLocation; //The location that was last send to the server
 
-
-    private void OnEnable()
+    //Functions
+    private void Start()
     {
         StartTracking();
     }
@@ -50,49 +60,21 @@ public class GPSManager : Singleton<GPSManager>
 
     protected virtual void StartTracking()
     {
-        StartCoroutine(StartTrackingRoutine());
+
     }
 
-    private IEnumerator StartTrackingRoutine()
+    protected void OnStartTrackingCompleted()
     {
-        // First, check if user has location service enabled
-        if (!Input.location.isEnabledByUser)
+        if (m_GPSInitializedEvent != null)
         {
-            m_GPSState = GPSState.Disabled;
-            yield return null;
+            m_GPSInitializedEvent();
         }
-
-        Input.location.Start();
-
-        //Gather data
-        int maxWait = m_TimeoutTime;
-        while (Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
-        {
-            yield return new WaitForSeconds(1);
-            maxWait--;
-        }
-
-        // Service timed out
-        if (maxWait <= 0)
-        {
-            m_GPSState = GPSState.TimedOut;
-            yield return null;
-        }
-
-        // Connection has failed
-        if (Input.location.status == LocationServiceStatus.Failed)
-        {
-            m_GPSState = GPSState.Failed;
-            yield return null;
-        }
-
-        m_InitializeTime = Input.location.lastData.timestamp;
-        m_GPSState = GPSState.Running;
     }
 
     protected virtual void StopTracking()
     {
         m_GPSState = GPSState.NotRunning;
+        m_InitializeTime = 0;
     }
 
     protected virtual void Update()
@@ -172,5 +154,10 @@ public class GPSManager : Singleton<GPSManager>
     public double GetInitializationTime()
     {
         return m_InitializeTime;
+    }
+
+    public bool IsInitialized()
+    {
+        return (m_GPSState == GPSState.Running);
     }
 }

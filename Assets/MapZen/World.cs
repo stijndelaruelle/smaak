@@ -10,12 +10,6 @@ public class World : Singleton<World>
     private Tile m_TilePrefab;
 
     [SerializeField]
-    private float m_Latitude;
-
-    [SerializeField]
-    private float m_Longitude;
-
-    [SerializeField]
     private int m_Zoom = 0;
 
     [SerializeField] private bool m_Earth;
@@ -24,6 +18,8 @@ public class World : Singleton<World>
     [SerializeField] private bool m_Landuse;
     [SerializeField] private bool m_Buildings;
     private Tile.TileDetail m_Detail;
+
+    private bool m_IsInitialized = false;
 
     private Vector2 m_CentralMapID;
     private Rect m_CentralMapSize;
@@ -45,21 +41,30 @@ public class World : Singleton<World>
 
 	private void Start() 
     {
+        GPSManager.Instance.GPSInitializedEvent += OnGPSInitialized;
+    }
+
+    private void Initialize()
+    {
+        GPSManager gps = GPSManager.Instance;
+        float latitude = gps.GetLatitude();
+        float longitude = gps.GetLongitude();
+
         //Central map ID
-        m_CentralMapID = Extensions.WorldToTilePos(m_Latitude, m_Longitude, m_Zoom);
+        m_CentralMapID = Extensions.WorldToTilePos(latitude, longitude, m_Zoom);
         m_CentralMapSize = GM.TileBounds(m_CentralMapID, m_Zoom);
 
         m_Detail = 0x0;
-        if (m_Earth)     m_Detail |= Tile.TileDetail.Earth;
-        if (m_Water)     m_Detail |= Tile.TileDetail.Water;
-        if (m_Roads)     m_Detail |= Tile.TileDetail.Roads;
-        if (m_Landuse)   m_Detail |= Tile.TileDetail.Landuse;
+        if (m_Earth) m_Detail |= Tile.TileDetail.Earth;
+        if (m_Water) m_Detail |= Tile.TileDetail.Water;
+        if (m_Roads) m_Detail |= Tile.TileDetail.Roads;
+        if (m_Landuse) m_Detail |= Tile.TileDetail.Landuse;
         if (m_Buildings) m_Detail |= Tile.TileDetail.Buildings;
 
         //Generate 9 maps
         //for (int x = 0; x < 1; ++x)
         //{
-        //    for (int y = 0; y < 1; ++y)
+        //   for (int y = 0; y < 1; ++y)
         //    {
         for (int x = -1; x <= 1; ++x)
         {
@@ -76,10 +81,15 @@ public class World : Singleton<World>
         m_Boundries.yMin = -m_CentralMapSize.height;
         m_Boundries.xMax = m_Boundries.xMin + (m_CentralMapSize.width * 2);
         m_Boundries.yMax = m_Boundries.yMin + (m_CentralMapSize.height * 2);
+
+        m_IsInitialized = true;
     }
 
     private void Update()
     {
+        if (!m_IsInitialized)
+            return;
+
         Vector3 left = Camera.main.WorldToViewportPoint(new Vector3(m_Boundries.xMin + transform.position.x, 0.0f, 0.0f));
         Vector3 right = Camera.main.WorldToViewportPoint(new Vector3(m_Boundries.xMax + transform.position.x, 0.0f, 0.0f));
         Vector3 bottom = Camera.main.WorldToViewportPoint(new Vector3(0.0f, 0.0f, m_Boundries.yMax + transform.position.z));
@@ -254,4 +264,11 @@ public class World : Singleton<World>
 
         return diff;
     }
+
+    //Event callbacks
+    private void OnGPSInitialized()
+    {
+        Initialize();
+    }
+
 }

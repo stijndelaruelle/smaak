@@ -9,8 +9,12 @@ public class GPSManagerDebug : GPSManager
     [SerializeField]
     private bool m_AllowDebugClicking = true;
 
-    private float m_Latitude;
-    private float m_Longitude;
+    //Default values for testing purposes
+    //Vechtplantsoen 52.1177716f 5.088012499999991f
+    //Pladutsestraat 50.798254979796425f 3.5722437500953674f
+    //Bugtest
+    private float m_Latitude = 52.1177716f;
+    private float m_Longitude = 5.088012499999991f;
     private double m_Timestamp;
 
     protected override void Awake()
@@ -83,6 +87,8 @@ public class GPSManagerDebug : GPSManager
         m_Timestamp = m_InitializeTime;
 
         m_GPSState = GPSState.Running;
+
+        OnStartTrackingCompleted();
     }
 
     public override CustomLocationInfo GetLocationInfo()
