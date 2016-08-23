@@ -5,7 +5,7 @@ using System;
 public class GPSManagerMobile : GPSManager
 {
     //GPSManager
-    protected virtual void StartTracking()
+    protected override void StartTracking()
     {
         StartCoroutine(StartTrackingRoutine());
     }
@@ -32,6 +32,7 @@ public class GPSManagerMobile : GPSManager
         // Service timed out
         if (maxWait <= 0)
         {
+            Debug.Log("GPS timed out.");
             m_GPSState = GPSState.TimedOut;
             yield return null;
         }
@@ -39,6 +40,7 @@ public class GPSManagerMobile : GPSManager
         // Connection has failed
         if (Input.location.status == LocationServiceStatus.Failed)
         {
+            Debug.Log("GPS failed to initialize");
             m_GPSState = GPSState.Failed;
             yield return null;
         }
