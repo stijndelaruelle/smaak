@@ -70,16 +70,13 @@ public class Tile : MonoBehaviour
     public void Initialize(Vector2 mapID, int zoom, TileDetail detail)
     {
         StartCoroutine(CreateTile(mapID, zoom, detail));
-
-        #if UNITY_EDITOR
-            InitializeDebug(mapID, zoom);
-        #endif
     }
 
     private IEnumerator CreateTile(Vector2 mapID, int zoom, TileDetail detail)
     {
         //Generate the url
-        string filePath = Application.persistentDataPath + "/" + zoom + "_" + mapID.x + "_" + mapID.y + "_";
+        string dirPath = Application.persistentDataPath;
+        string filePath = dirPath + "/" + zoom + "_" + mapID.x + "_" + mapID.y + "_";
         string url = "http://vector.mapzen.com/osm/";
 
         if (detail == 0)
@@ -102,16 +99,45 @@ public class Tile : MonoBehaviour
         JSONNode mapData = null;
 
         //If the data is already cached, use it.
+        bool cacheExists = false;
+
         if (File.Exists(filePath))
         {
             var r = new StreamReader(filePath, Encoding.Default);
             mapData = JSON.Parse(r.ReadToEnd());
 
+            cacheExists = true;
             //Write down somewhere when it was last used, so we can clear the cache on demand. Otherwise player's phones may fill up A LOT!
         }
 
+        //The exact file doesn't exist, but maybe a file with more data exists
+        else if (Directory.Exists(dirPath))
+        {
+            string[] allFiles = Directory.GetFiles(dirPath);
+
+            for (int i = 0; i < allFiles.Length; ++i)
+            {
+                //It's a file of the same map, but does it have enough data?
+                if (allFiles[i].Contains(zoom + "_" + mapID.x + "_" + mapID.y))
+                {
+                    if ((detail & TileDetail.Earth) == TileDetail.Earth)         { cacheExists = allFiles[i].Contains("E"); }
+                    if ((detail & TileDetail.Water) == TileDetail.Water)         { cacheExists = allFiles[i].Contains("W"); }
+                    if ((detail & TileDetail.Roads) == TileDetail.Roads)         { cacheExists = allFiles[i].Contains("R"); }
+                    if ((detail & TileDetail.Landuse) == TileDetail.Landuse)     { cacheExists = allFiles[i].Contains("L"); }
+                    if ((detail & TileDetail.Buildings) == TileDetail.Buildings) { cacheExists = allFiles[i].Contains("B"); }
+
+                    if (cacheExists)
+                    {
+                        var r = new StreamReader(allFiles[i], Encoding.Default);
+                        mapData = JSON.Parse(r.ReadToEnd());
+                        break;
+                    }
+                }
+            }
+        }
+
         //If data does not exist, we download it.
-        else
+        if (!cacheExists)
         {
             WWW www = new WWW(url);
             yield return www;
@@ -149,6 +175,10 @@ public class Tile : MonoBehaviour
 
         if ((detail & TileDetail.Buildings) == TileDetail.Buildings)
             CreateBuildings(mapData["buildings"]);
+
+        #if UNITY_EDITOR
+            InitializeDebug(mapID, zoom);
+        #endif
     }
 
     private void CreateWater(JSONNode waterData)

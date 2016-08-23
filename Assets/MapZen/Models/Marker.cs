@@ -70,7 +70,7 @@ public class Marker : PoolableObject
         pm.x += offset.x;
         pm.y += offset.y;
 
-        transform.position = new Vector3(pm.x, 1.0f, pm.y);
+        transform.localPosition = new Vector3(pm.x, 1.0f, pm.y);
     }
 
     #region PoolableObject

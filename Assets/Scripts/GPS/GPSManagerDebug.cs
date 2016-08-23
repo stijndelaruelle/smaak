@@ -25,7 +25,7 @@ public class GPSManagerDebug : GPSManager
         if (m_AllowDebugClicking)
         {
             //On click
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(1))
             {
                 UpdateLocationInfo();
             }
@@ -59,8 +59,9 @@ public class GPSManagerDebug : GPSManager
 
         //Shave off the world offset
         Vector2 offset = World.Instance.CalculateOffset(tile.MapID); //Find object SUPER DIRTY, but this is debug code and otherwise passing the variable trough will clutter the actual live code.
-        worldPosition.x -= offset.x;
-        worldPosition.z -= offset.y;
+        worldPosition.x -= offset.x + World.Instance.gameObject.transform.position.x;
+        worldPosition.z -= offset.y + World.Instance.gameObject.transform.position.z;
+
 
         //Add the centers
         Rect rect = GM.TileBounds(tile.MapID, tile.Zoom);
