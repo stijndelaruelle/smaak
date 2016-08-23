@@ -3,7 +3,7 @@ using System.Collections;
 using Assets.Helpers;
 using System.Collections.Generic;
 
-[RequireComponent (typeof(SpriteRenderer))]
+[RequireComponent(typeof(MeshRenderer))]
 public class Marker : PoolableObject
 {
     [SerializeField]
@@ -19,11 +19,11 @@ public class Marker : PoolableObject
     private int m_Zoom = 0;
 
 
-    private SpriteRenderer m_Renderer;
+    private MeshRenderer m_Renderer;
 
     private void Awake()
     {
-        m_Renderer = GetComponent<SpriteRenderer>();
+        m_Renderer = GetComponent<MeshRenderer>();
         m_Renderer.enabled = false;
     }
 

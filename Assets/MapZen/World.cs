@@ -103,19 +103,6 @@ public class World : Singleton<World>
         else if (bottom.y > 0.2f) { MoveDown(); }
     }
 
-    private void RecenterWorld(Vector2 offset)
-    {
-        //Make sure that our worlds stays somewhat centered and we don't get insane position coords (can freak out)
-
-        //Move all our tiles 1 step to the right (locally)
-        for (int i = 0; i < transform.childCount; ++i)
-        {
-            transform.GetChild(i).transform.Translate(-offset.x, 0.0f, -offset.y);
-        }
-
-        //Move our world transform 1 step to the left
-        transform.Translate(offset.x, 0, offset.y);
-    }
 
     private void MoveLeft()
     {
@@ -241,6 +228,20 @@ public class World : Singleton<World>
         m_Tiles[8] = CreateTile(new Vector2(m_CentralMapID.x + 1, m_CentralMapID.y + 1));
     }
 
+    private void RecenterWorld(Vector2 offset)
+    {
+        //Make sure that our worlds stays somewhat centered and we don't get insane position coords (can freak out)
+
+        //Move all our tiles 1 step (locally)
+        for (int i = 0; i < transform.childCount; ++i)
+        {
+            transform.GetChild(i).transform.Translate(-offset.x, 0.0f, -offset.y);
+        }
+
+        //Move our world transform 1 step
+        transform.Translate(offset.x, 0.0f, offset.y);
+    }
+
     private Tile CreateTile(Vector2 mapID)
     {
         Vector2 diff = mapID - m_CentralMapID;
@@ -255,6 +256,7 @@ public class World : Singleton<World>
 
         return tile;
     }
+
 
     public Vector2 CalculateOffset(Vector2 mapID)
     {
