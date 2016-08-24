@@ -6,7 +6,13 @@ public class DragMap : MonoBehaviour
     [SerializeField]
     private float m_DragMultiplier;
 
+    private float m_StartCameraOrthographic;
     private Vector2 m_LastMousePosition;
+
+    private void Start()
+    {
+        m_StartCameraOrthographic = Camera.main.orthographicSize;
+    }
 
     private void Update()
     {
@@ -22,7 +28,8 @@ public class DragMap : MonoBehaviour
         {
             Vector2 delta = currentPosition - m_LastMousePosition;
 
-            transform.Translate(new Vector3(delta.x * m_DragMultiplier, 0.0f, delta.y * m_DragMultiplier));
+            float zoomMultiplier = Camera.main.orthographicSize / m_StartCameraOrthographic;
+            transform.Translate(new Vector3(delta.x * m_DragMultiplier * zoomMultiplier, 0.0f, delta.y * m_DragMultiplier * zoomMultiplier));
 
             m_LastMousePosition = currentPosition;
             m_LastMousePosition = currentPosition;
