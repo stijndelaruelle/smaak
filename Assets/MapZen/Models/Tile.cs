@@ -30,26 +30,10 @@ public class Tile : MonoBehaviour
         Drain,
         River,
         Stream,
-
-        //Roads
-        Highway,
-        MajorRoad,
-        MinorRoad,
-        Rail,
-        Path
     }
 
     [SerializeField]
-    private LineString m_WaterLinePrefab;
-
-    [SerializeField]
-    private Polygon m_WaterPolygonPrefab;
-
-    [SerializeField]
-    private LineString m_RoadPrefab;
-
-    [SerializeField]
-    private Polygon m_BuildingPrefab;
+    private WorldDetail m_WorldDetailPrefab;
 
     private Rect m_Rect;
 
@@ -186,28 +170,39 @@ public class Tile : MonoBehaviour
         #endif
     }
 
+
+    //Types
     private void CreateWater(JSONNode waterData)
     {
         if (waterData == null)
             return;
 
-        //Roads are always linestrings
         int i = 0;
         foreach (JSONNode geoData in waterData["features"].AsArray)
         {
-            string name = "Water " + i;
-            ++i;
+            //Create a root object
+            WorldDetail.WaterType waterType = geoData["properties"]["kind"].Value.ToWaterType();
+            int sort_key = geoData["properties"]["sort_key"].AsInt;
+
+            WorldDetail water = GameObject.Instantiate(m_WorldDetailPrefab) as WorldDetail;
+            water.name = "Water " + i;
+
+            water.transform.parent = this.transform;
+            water.transform.position = this.transform.position;
+
+            water.Initialize(waterType, sort_key);
 
             if (geoData["geometry"]["type"].Value == "LineString")
             {
-                LineStringType roadType = geoData["properties"]["kind"].Value.ToLineStringType();
-                CreateLineString(geoData["geometry"]["coordinates"], m_WaterLinePrefab, roadType.ToWidthFloat(), name);
+                ReadLineString(geoData["geometry"]["coordinates"], water);
             }
 
             else if (geoData["geometry"]["type"].Value == "Polygon")
             {
-                CreatePolygon(geoData["geometry"], m_WaterPolygonPrefab, name);
+                ReadPolygon(geoData["geometry"], water);
             }
+
+            ++i;
         }
     }
 
@@ -219,20 +214,30 @@ public class Tile : MonoBehaviour
         int i = 0;
         foreach (JSONNode geoData in roadData["features"].AsArray)
         {
-            string name = "Road " + i;
-            ++i;
+            //Create a root object
+            WorldDetail.RoadType roadType = geoData["properties"]["kind"].Value.ToRoadType();
+            int sort_key = geoData["properties"]["sort_key"].AsInt;
 
-            LineStringType roadType = geoData["properties"]["kind"].Value.ToLineStringType();
+            WorldDetail road = GameObject.Instantiate(m_WorldDetailPrefab) as WorldDetail;
+            road.name = "Road " + i;
 
+            road.transform.parent = this.transform;
+            road.transform.position = this.transform.position;
+
+            road.Initialize(roadType, sort_key);
+
+            //Gather data & generate models
             if (geoData["geometry"]["type"].Value == "LineString")
             {
-                CreateLineString(geoData["geometry"]["coordinates"], m_RoadPrefab, roadType.ToWidthFloat(), name);
+                ReadLineString(geoData["geometry"]["coordinates"], road);
             }
 
             else if (geoData["geometry"]["type"].Value == "MultiLineString")
             {
-                CreateMultiLineString(geoData["geometry"]["coordinates"], m_RoadPrefab, roadType.ToWidthFloat(), name);
+                ReadMultiLineString(geoData["geometry"]["coordinates"], road);
             }
+
+            ++i;
         }
     }
 
@@ -245,27 +250,38 @@ public class Tile : MonoBehaviour
         int i = 0;
         foreach (JSONNode geoData in buildingData["features"].AsArray)
         {
+            //Create a root object
+            int sort_key = geoData["properties"]["sort_key"].AsInt;
+
+            WorldDetail building = GameObject.Instantiate(m_WorldDetailPrefab) as WorldDetail;
+            building.name = "Building " + i;
+
+            building.transform.parent = this.transform;
+            building.transform.position = this.transform.position;
+
+            building.Initialize(WorldDetail.BuildingType.Default, sort_key);
+
             if (geoData["geometry"]["type"].Value == "Polygon")
             {
-                string name = "Building " + i;
-                ++i;
-
-                CreatePolygon(geoData["geometry"], m_BuildingPrefab, name);
+                ReadPolygon(geoData["geometry"], building);
             }
-            
+
+            ++i;
         }
     }
 
-    private void CreateMultiLineString(JSONNode multiLineStringData, LineString prefab, float width, string name)
+
+    //Models
+    private void ReadMultiLineString(JSONNode multiLineStringData, WorldDetail parent)
     {
         //Every coordinate is another linestring in this case (confusing naming by the guys of mapzen)
         foreach (JSONNode lineString in multiLineStringData.AsArray)
         {
-            CreateLineString(lineString, prefab, width, name);
+            ReadLineString(lineString, parent);
         }
     }
 
-    private void CreateLineString(JSONNode lineStringData, LineString prefab, float width, string name)
+    private void ReadLineString(JSONNode lineStringData, WorldDetail worldDetail)
     {
         if (lineStringData == null)
             return;
@@ -279,24 +295,10 @@ public class Tile : MonoBehaviour
             vertices.Add(pm.ToVector3xz());
         }
 
-        //Add a new LineString component & parent it to this object
-        LineString lineString = GameObject.Instantiate(prefab) as LineString;
-        lineString.name = name;
-
-        lineString.transform.parent = this.transform;
-        lineString.transform.position = this.transform.position;
-
-        try
-        {
-            lineString.Initialize(vertices, width);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError(ex);
-        }
+        worldDetail.CreateLineString(vertices);
     }
 
-    private void CreatePolygon(JSONNode polygonData, Polygon prefab, string name)
+    private void ReadPolygon(JSONNode polygonData, WorldDetail worldDetail)
     {
         if (polygonData == null)
             return;
@@ -315,33 +317,11 @@ public class Tile : MonoBehaviour
             vertices.Add(pm.ToVector3xz());
         }
 
-        try
-        {
-           // Vector3 center = vertices.Aggregate((acc, cur) => acc + cur) / vertices.Count;
-            //for (int i = 0; i < vertices.Count; i++)
-            //{
-            //    vertices[i] = vertices[i] - center;
-            //}
-
-            //Add a new Polygon component & parent it to this object
-            Polygon polygon = GameObject.Instantiate(prefab) as Polygon;
-            polygon.name = name;
-
-            polygon.transform.parent = this.transform;
-            polygon.transform.position = this.transform.position;
-            //polygon.transform.position = center;
-            //polygon.transform.localPosition = center;
-            
-            polygon.Initialize(vertices);
-        }
-        catch (Exception ex)
-        {
-            Debug.Log(ex);
-        }
+        worldDetail.CreatePolygon(vertices);
     }
 
     #if UNITY_EDITOR
-    private void InitializeDebug(Vector2 mapID, int zoom)
+        private void InitializeDebug(Vector2 mapID, int zoom)
     {
         //Used for getting debug GPS locations
         m_MapID = mapID;

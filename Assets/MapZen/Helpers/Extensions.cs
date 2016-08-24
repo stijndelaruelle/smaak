@@ -16,50 +16,43 @@ public static class Extensions
         return new Vector3(v.x, 0, v.y);
     }
 
-    public static Tile.LineStringType ToLineStringType(this string s)
+    public static WorldDetail.WaterType ToWaterType(this string s)
     {
+        //Could swap this for an Enum.Parse(), may decide that at a later date
         switch (s)
         {
-            //Water
-            case "canal":       return Tile.LineStringType.Canal;
-            case "dam":         return Tile.LineStringType.Dam;
-            case "ditch":       return Tile.LineStringType.Ditch;
-            case "drain":       return Tile.LineStringType.Drain;
-            case "river":       return Tile.LineStringType.River;
-            case "stream":      return Tile.LineStringType.Stream;
+            case "basin":           return WorldDetail.WaterType.Basin;
+            case "dock":            return WorldDetail.WaterType.Dock;
+            case "lake":            return WorldDetail.WaterType.Lake;
+            case "ocean":           return WorldDetail.WaterType.Ocean;
+            case "playa":           return WorldDetail.WaterType.Playa;
+            case "riverbank":       return WorldDetail.WaterType.Riverbank;
+            case "swimming_poll":   return WorldDetail.WaterType.SwimmingPool;
+            case "water":           return WorldDetail.WaterType.Water;
+            case "canal":           return WorldDetail.WaterType.Canal;
+            case "dam":             return WorldDetail.WaterType.Dam;
+            case "ditch":           return WorldDetail.WaterType.Ditch;
+            case "drain":           return WorldDetail.WaterType.Drain;
+            case "river":           return WorldDetail.WaterType.River;
+            case "stream":          return WorldDetail.WaterType.Stream;
 
-            //Roads
-            case "highway":     return Tile.LineStringType.Highway;
-            case "major_road":  return Tile.LineStringType.MajorRoad;
-            case "minor":       return Tile.LineStringType.MinorRoad;
-            case "rail":        return Tile.LineStringType.Rail;
-            case "path":        return Tile.LineStringType.Path;
-
-            default:            return Tile.LineStringType.Undefined;
+            default: return WorldDetail.WaterType.Undefined;
         }
     }
 
-    public static float ToWidthFloat(this Tile.LineStringType s)
+    public static WorldDetail.RoadType ToRoadType(this string s)
     {
         switch (s)
         {
-            //Water
-            case Tile.LineStringType.Canal:     return 1;
-            case Tile.LineStringType.Dam:       return 5;
-            case Tile.LineStringType.Ditch:     return 5;
-            case Tile.LineStringType.Drain:     return 5;
-            case Tile.LineStringType.River:     return 10;
-            case Tile.LineStringType.Stream:    return 10;
+            case "highway":     return WorldDetail.RoadType.Highway;
+            case "major_road":  return WorldDetail.RoadType.MajorRoad;
+            case "minor_road":  return WorldDetail.RoadType.MinorRoad;
+            case "rail":        return WorldDetail.RoadType.Rail;
+            case "path":        return WorldDetail.RoadType.Path;
+            case "bicycle":     return WorldDetail.RoadType.BicycleRoad;
 
-            //Roads
-            case Tile.LineStringType.Highway:   return 10;
-            case Tile.LineStringType.MajorRoad: return 5;
-            case Tile.LineStringType.MinorRoad: return 3;
-            case Tile.LineStringType.Rail:      return 3;
-            case Tile.LineStringType.Path:      return 2;
+            default:            return WorldDetail.RoadType.Undefined;
         }
-
-        return 2;
     }
 
     //http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames

@@ -50,7 +50,7 @@ public class GPSManagerDebug : GPSManager
 
         //Get the map id & zoom (thanks to the debug collider)
         RaycastHit hit;
-        bool success = Physics.Raycast(new Ray(mousePosition, -Vector3.up), out hit, 200.0f);
+        bool success = Physics.Raycast(new Ray(new Vector3(mousePosition.x, Camera.main.transform.position.y, mousePosition.z), -Vector3.up), out hit, Camera.main.farClipPlane);
 
         if (!success)
             return;
