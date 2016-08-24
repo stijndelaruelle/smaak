@@ -9,6 +9,12 @@ public class ZoomCamera : MonoBehaviour
     [SerializeField]
     private float m_ZoomMultiplier;
 
+    private bool m_IsZooming = false;
+    public bool IsZooming
+    {
+        get { return m_IsZooming; }
+    }
+
     private float m_PreviousLength;
 
     private void Update()
@@ -22,6 +28,11 @@ public class ZoomCamera : MonoBehaviour
                 m_PreviousLength = (firstPosition - secondPosition).sqrMagnitude;
             }
 
+            if (Input.GetMouseButtonUp(3))
+            {
+                m_IsZooming = false;
+            }
+
             if (Input.GetMouseButton(3))
             {
         #else
@@ -30,6 +41,7 @@ public class ZoomCamera : MonoBehaviour
 
             if (firstTouch.phase == TouchPhase.Ended || secondTouch.phase == TouchPhase.Ended)
             {
+                m_IsZooming = false;
                 return;
             }
 
@@ -55,6 +67,7 @@ public class ZoomCamera : MonoBehaviour
             if (m_Camera.orthographicSize > 255.0f)
                 m_Camera.orthographicSize = 255.0f;
 
+            m_IsZooming = true;
             m_PreviousLength = length;
 
         #if UNITY_EDITOR

@@ -4,6 +4,9 @@ using System.Collections;
 public class DragMap : MonoBehaviour
 {
     [SerializeField]
+    private ZoomCamera m_ZoomCamera;
+
+    [SerializeField]
     private float m_DragMultiplier;
 
     private float m_StartCameraOrthographic;
@@ -16,6 +19,9 @@ public class DragMap : MonoBehaviour
 
     private void Update()
     {
+        if (m_ZoomCamera.IsZooming)
+            return;
+
         Vector2 currentPosition = Input.mousePosition;
 
         //On click
